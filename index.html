@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Click A Blackhole</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #020208;
+      color: #ffffff;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* --- TOP BAR / LOGIN PROFILE --- */
+    .top-bar {
+      position: absolute;
+      top: 20px;
+      right: 25px;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(11, 12, 22, 0.85);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 10px 18px;
+      border-radius: 25px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    .user-info {
+      font-size: 0.9rem;
+      color: #a855f7;
+      font-weight: 600;
+    }
+
+    .profile-btn {
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      border: none;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .profile-btn:hover {
+      transform: scale(1.05);
+    }
+
+    /* --- LOGIN MODAL POPUP --- */
+    #login-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(2, 2, 8, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .login-box {
+      background: #0b0c16;
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      padding: 35px;
+      border-radius: 15px;
+      box-shadow: 0 0 30px rgba(168, 85, 247, 0.2);
+      width: 330px;
+      text-align: center;
+      position: relative;
+    }
+
+    .login-box h2 {
+      color: #c084fc;
+      margin-bottom: 20px;
+      font-size: 1.6rem;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      background: #1e1b4b;
+      border: 1px solid #4338ca;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .login-input:focus {
+      border-color: #a855f7;
+    }
+
+    .login-action-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .login-action-btn:hover {
+      transform: scale(1.02);
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    .close-modal:hover {
+      color: #fff;
+    }
+
+    .login-error {
+      color: #ef4444;
+      font-size: 0.85rem;
+      margin-top: 10px;
+      display: none;
+    }
+
+    /* --- CANVAS BACKGROUND --- */
+    #space-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* --- MAIN GAME AREA --- */
+    .game-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .stats-panel {
+      text-align: center;
+      margin-bottom: 40px;
+      z-index: 5;
+    }
+
+    .click-count {
+      font-size: 3.5rem;
+      font-weight: 800;
+      color: #c084fc;
+      text-shadow: 0 0 20px rgba(192, 132, 252, 0.6);
+      letter-spacing: 1px;
+    }
+
+    .cps-count {
+      font-size: 1.2rem;
+      color: #94a3b8;
+      margin-top: 5px;
+    }
+
+    .stage-title {
+      font-size: 1rem;
+      color: #e2e8f0;
+      margin-top: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 6px 16px;
+      border-radius: 20px;
+      display: inline-block;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* --- BLACK HOLE GRAPHICS & EVOLUTIONS --- */
+    .blackhole-wrapper {
+      position: relative;
+      width: 350px;
+      height: 350px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .blackhole {
+      width: 120px;
+      height: 120px;
+      background-color: #000;
+      border-radius: 50%;
+      position: relative;
+      z-index: 3;
+      transition: transform 0.08s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.5s ease, border 0.5s ease;
+      pointer-events: none;
+    }
+
+    .blackhole-wrapper:active .blackhole {
+      transform: scale(0.92) !important;
+    }
+
+    .stage-0 {
+      box-shadow: 0 0 20px 2px rgba(168, 85, 247, 0.5), inset 0 0 10px rgba(168, 85, 247, 0.3);
+      border: 2px solid #a855f7;
+    }
+
+    .stage-1 {
+      box-shadow: 0 0 30px 5px #f59e0b, 0 0 60px 15px rgba(245, 158, 11, 0.3);
+      border: 2px solid #fbbf24;
+    }
+
+    .stage-2 {
+      box-shadow: 0 0 40px 10px #8b5cf6, 0 0 80px 20px #ec4899;
+      border: 3px solid #c084fc;
+    }
+
+    .stage-3 {
+      box-shadow: 0 0 50px 15px #3b82f6, 0 0 100px 30px #8b5cf6, inset 0 0 20px #3b82f6;
+      border: 4px solid #60a5fa;
+      animation: supermassive-pulse 3s infinite alternate;
+    }
+
+    .stage-4 {
+      box-shadow: 0 0 70px 25px #ef4444, 0 0 120px 50px #8b5cf6;
+      border: 5px solid #f43f5e;
+      animation: anomaly-pulse 1.5s infinite alternate;
+    }
+
+    @keyframes supermassive-pulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.06); }
+    }
+
+    @keyframes anomaly-pulse {
+      0% { transform: scale(1) rotate(0deg); }
+      50% { transform: scale(1.08) rotate(3deg); }
+      100% { transform: scale(1.02) rotate(-3deg); }
+    }
+
+    /* Floating Clicks Effect */
+    .floating-text {
+      position: absolute;
+      color: #a855f7;
+      font-weight: bold;
+      font-size: 1.4rem;
+      pointer-events: none;
+      z-index: 10;
+      animation: floatUp 0.8s ease-out forwards;
+      text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-60px) scale(1.3); }
+    }
+
+    /* --- SIDEBAR UPGRADE SHOP --- */
+    .shop-container {
+      width: 400px;
+      background: rgba(11, 12, 22, 0.85);
+      backdrop-filter: blur(12px);
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      display: flex;
+      flex-direction: column;
+      z-index: 5;
+      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .shop-header {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #38bdf8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 12px;
+    }
+
+    .shop-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      padding-right: 5px;
+      flex: 1;
+    }
+
+    .shop-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    .shop-list::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+
+    .upgrade-card {
+      background: rgba(30, 27, 75, 0.5);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+
+    .upgrade-card:hover:not(.disabled) {
+      background: rgba(49, 46, 129, 0.8);
+      border-color: #6366f1;
+      transform: translateY(-2px);
+    }
+
+    .upgrade-card.disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      border-color: rgba(255, 255, 255, 0.05);
+      background: rgba(15, 23, 42, 0.4);
+    }
+
+    .upgrade-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .upgrade-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #f8fafc;
+    }
+
+    .upgrade-desc {
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
+
+    .upgrade-cost {
+      font-weight: 700;
+      color: #f59e0b;
+      font-size: 0.9rem;
+    }
+
+    .upgrade-count {
+      font-size: 0.8rem;
+      color: #a855f7;
+      margin-left: 5px;
+    }
+
+    #end-game-btn {
+      margin-top: 15px;
+      background: linear-gradient(135deg, #ef4444, #991b1b);
+      border: 1px solid #f87171;
+      color: white;
+      padding: 18px;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 1rem;
+      cursor: pointer;
+      display: none;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      animation: pulse-red 1s infinite alternate;
+    }
+
+    @keyframes pulse-red {
+      0% { box-shadow: 0 0 10px #ef4444; }
+      100% { box-shadow: 0 0 35px #ef4444, 0 0 10px #f87171; }
+    }
+
+    .reset-btn {
+      margin-top: 10px;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #64748b;
+      padding: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .reset-btn:hover {
+      color: #ef4444;
+      border-color: #ef4444;
+    }
+
+    #ending-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #000;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 2s ease;
+      text-align: center;
+      padding: 20px;
+    }
+
+    #ending-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    #ending-overlay h1 {
+      font-size: 3.5rem;
+      color: #ffffff;
+      text-shadow: 0 0 30px #ef4444;
+      margin-bottom: 15px;
+    }
+
+    #ending-overlay p {
+      font-size: 1.2rem;
+      color: #94a3b8;
+      max-width: 600px;
+      line-height: 1.6;
+    }
+
+    #ending-overlay button {
+      margin-top: 30px;
+      background: #ffffff;
+      color: #000;
+      border: none;
+      padding: 12px 30px;
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    #ending-overlay button:hover {
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Right Login Profile Bar -->
+  <div class="top-bar">
+    <span class="user-info" id="user-display">Guest Pilot</span>
+    <button class="profile-btn" onclick="openLoginModal()">Login / Save</button>
+  </div>
+
+  <!-- Login Modal Popup -->
+  <div id="login-modal">
+    <div class="login-box">
+      <button class="close-modal" onclick="closeLoginModal()">×</button>
+      <h2>Pilot Profile</h2>
+      <input type="text" id="username-input" class="login-input" placeholder="Enter Username" autocomplete="off">
+      <input type="password" id="password-input" class="login-input" placeholder="Enter Password">
+      <button class="login-action-btn" onclick="attemptLogin()">Save / Load Account</button>
+      <div id="login-error" class="login-error">Incorrect password for existing username!</div>
+    </div>
+  </div>
+
+  <canvas id="space-bg"></canvas>
+
+  <div class="game-container">
+    <div class="stats-panel">
+      <div class="click-count"><span id="click-display">0</span></div>
+      <div class="cps-count"><span id="cps-display">0</span> Clicks / Sec</div>
+      <div><span id="stage-display" class="stage-title">Stage: Small Singularity</span></div>
+    </div>
+
+    <div class="blackhole-wrapper" id="blackhole-click-area">
+      <div id="blackhole" class="blackhole stage-0"></div>
+    </div>
+  </div>
+
+  <div class="shop-container">
+    <div class="shop-header">
+      <span>Upgrades</span>
+      <span style="font-size: 0.8rem; color: #64748b;" id="multiplier-display">1x Power</span>
+    </div>
+
+    <div class="shop-list" id="shop-list"></div>
+
+    <button id="end-game-btn" onclick="destroyUniverse()">
+      💥 SURPASS REALITY & BLOW UP UNIVERSE
+    </button>
+
+    <button class="reset-btn" onclick="resetGame()">Reset Save Progress</button>
+  </div>
+
+  <div id="ending-overlay">
+    <h1>THE UNIVERSE HAS BEEN CONSUMED</h1>
+    <p>Your blackhole expanded beyond 1 Trillion clicks, exceeding critical cosmic threshold mass. Space-time crumbled, swallowing galaxies, light, and reality itself into absolute void.</p>
+    <button onclick="resetGame()">Recreate Big Bang (Play Again)</button>
+  </div>
+
+  <script>
+    let currentUser = null;
+    let state = {
+      clicks: 0,
+      clickPower: 1,
+      autoCps: 0,
+      stage: 0
+    };
+
+    const TARGET_GOAL = 1000000000000;
+
+    const upgrades = [
+      { id: 'c1', name: 'Micro Grav-Lens', cost: 10, power: 1, type: 'click', count: 0, desc: '+1 click per tap' },
+      { id: 'c2', name: 'Orbital Tap', cost: 50, power: 5, type: 'click', count: 0, desc: '+5 clicks per tap' },
+      { id: 'c3', name: 'Event Horizon Pull', cost: 100, power: 10, type: 'click', count: 0, desc: '+10 clicks per tap' },
+      { id: 'c4', name: 'Subatomic Crush', cost: 500, power: 50, type: 'click', count: 0, desc: '+50 clicks per tap' },
+      { id: 'c5', name: 'Singularity Tap', cost: 5000, power: 250, type: 'click', count: 0, desc: '+250 clicks per tap' },
+      
+      { id: 'a1', name: 'Space Dust Vacuum', cost: 100, cps: 1, type: 'auto', count: 0, desc: 'Sucks in +1 click/sec' },
+      { id: 'a2', name: 'Asteroid Sweeper', cost: 500, cps: 10, type: 'auto', count: 0, desc: 'Swallows +10 clicks/sec' },
+      { id: 'a3', name: 'Comet Collector', cost: 2500, cps: 50, type: 'auto', count: 0, desc: 'Consumes +50 clicks/sec' },
+      { id: 'a4', name: 'Moon Devourer', cost: 15000, cps: 300, type: 'auto', count: 0, desc: 'Devours +300 clicks/sec' },
+      { id: 'a5', name: 'Star Eater', cost: 100000, cps: 2000, type: 'auto', count: 0, desc: 'Feeds +2,000 clicks/sec' },
+      { id: 'a6', name: 'Galaxy Ingestor', cost: 2000000, cps: 50000, type: 'auto', count: 0, desc: 'Ingests +50,000 clicks/sec' },
+      { id: 'a7', name: 'Cosmic Filament Drain', cost: 50000000, cps: 1500000, type: 'auto', count: 0, desc: 'Drains +1.5M clicks/sec' }
+    ];
+
+    const stages = [
+      { threshold: 0, name: "Stage: Small Singularity", class: "stage-0" },
+      { threshold: 100, name: "Stage: Accretion Disk Border", class: "stage-1" },
+      { threshold: 1000, name: "Stage: Photon Warp Sphere", class: "stage-2" },
+      { threshold: 100000, name: "Stage: Supermassive Black Hole", class: "stage-3" },
+      { threshold: 100000000, name: "Stage: Cosmic Anomaly", class: "stage-4" }
+    ];
+
+    const clickDisplay = document.getElementById('click-display');
+    const cpsDisplay = document.getElementById('cps-display');
+    const stageDisplay = document.getElementById('stage-display');
+    const blackhole = document.getElementById('blackhole');
+    const clickArea = document.getElementById('blackhole-click-area');
+    const shopList = document.getElementById('shop-list');
+    const endGameBtn = document.getElementById('end-game-btn');
+    const multDisplay = document.getElementById('multiplier-display');
+
+    // Initialize Game Immediately
+    function init() {
+      renderShop();
+      updateUI();
+      setupCanvasBackground();
+
+      // Auto-clicker loop
+      setInterval(() => {
+        if (state.autoCps > 0) {
+          addClicks(state.autoCps / 10);
+        }
+      }, 100);
+
+      // Auto save every 5 seconds if logged in
+      setInterval(() => {
+        if (currentUser) saveGame();
+      }, 5000);
+    }
+
+    // Modal Controls
+    function openLoginModal() {
+      document.getElementById('login-modal').style.display = 'flex';
+    }
+    function closeLoginModal() {
+      document.getElementById('login-modal').style.display = 'none';
+      document.getElementById('login-error').style.display = 'none';
+    }
+
+    // Login & Account Handler
+    function attemptLogin() {
+      const usernameInput = document.getElementById('username-input').value.trim();
+      const passwordInput = document.getElementById('password-input').value;
+      const errorEl = document.getElementById('login-error');
+
+      if (!usernameInput || !passwordInput) {
+        errorEl.innerText = "Please enter both username and password.";
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      let accounts = JSON.parse(localStorage.getItem('blackhole_accounts') || '{}');
+
+      if (accounts[usernameInput]) {
+        if (accounts[usernameInput].password === passwordInput) {
+          currentUser = usernameInput;
+          loadGame();
+          document.getElementById('user-display').innerText = currentUser;
+          closeLoginModal();
+        } else {
+          errorEl.innerText = "Incorrect password for this username.";
+          errorEl.style.display = 'block';
+        }
+      } else {
+        accounts[usernameInput] = { password: passwordInput };
+        localStorage.setItem('blackhole_accounts', JSON.stringify(accounts));
+        currentUser = usernameInput;
+        saveGame();
+        document.getElementById('user-display').innerText = currentUser;
+        closeLoginModal();
+      }
+    }
+
+    clickArea.addEventListener('click', (e) => {
+      addClicks(state.clickPower);
+      createFloatingText(e.clientX, e.clientY, `+${formatNumber(state.clickPower)}`);
+      playClickPulse();
+    });
+
+    function addClicks(amount) {
+      state.clicks += amount;
+      checkEvolutions();
+      updateUI();
+    }
+
+    function buyUpgrade(index) {
+      const item = upgrades[index];
+      if (state.clicks >= item.cost) {
+        state.clicks -= item.cost;
+        item.count++;
+
+        if (item.type === 'click') {
+          state.clickPower += item.power;
+        } else if (item.type === 'auto') {
+          state.autoCps += item.cps;
+        }
+
+        item.cost = Math.floor(item.cost * 1.35);
+
+        renderShop();
+        updateUI();
+        if (currentUser) saveGame();
+      }
+    }
+
+    function checkEvolutions() {
+      let currentStageIndex = 0;
+      for (let i = stages.length - 1; i >= 0; i--) {
+        if (state.clicks >= stages[i].threshold) {
+          currentStageIndex = i;
+          break;
+        }
+      }
+
+      state.stage = currentStageIndex;
+      const currentStage = stages[currentStageIndex];
+
+      blackhole.className = `blackhole ${currentStage.class}`;
+      stageDisplay.innerText = currentStage.name;
+
+      let scaleSize = 1 + Math.min(Math.log10(state.clicks + 1) * 0.12, 2.2);
+      blackhole.style.transform = `scale(${scaleSize})`;
+
+      if (state.clicks >= TARGET_GOAL) {
+        endGameBtn.style.display = 'block';
+      }
+    }
+
+    function updateUI() {
+      clickDisplay.innerText = formatNumber(Math.floor(state.clicks));
+      cpsDisplay.innerText = formatNumber(state.autoCps);
+      multDisplay.innerText = `${formatNumber(state.clickPower)} / Click`;
+
+      upgrades.forEach((item, index) => {
+        const btn = document.getElementById(`upg-btn-${index}`);
+        if (btn) {
+          if (state.clicks >= item.cost) {
+            btn.classList.remove('disabled');
+          } else {
+            btn.classList.add('disabled');
+          }
+        }
+      });
+    }
+
+    function renderShop() {
+      shopList.innerHTML = '';
+      upgrades.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = `upgrade-card ${state.clicks < item.cost ? 'disabled' : ''}`;
+        card.id = `upg-btn-${index}`;
+        card.onclick = () => buyUpgrade(index);
+
+        card.innerHTML = `
+          <div class="upgrade-info">
+            <span class="upgrade-name">${item.name} <span class="upgrade-count">x${item.count}</span></span>
+            <span class="upgrade-desc">${item.desc}</span>
+          </div>
+          <div class="upgrade-cost">${formatNumber(item.cost)}</div>
+        `;
+        shopList.appendChild(card);
+      });
+    }
+
+    function formatNumber(num) {
+      if (num >= 1e12) return (num / 1e12).toFixed(2) + " T";
+      if (num >= 1e9) return (num / 1e9).toFixed(2) + " B";
+      if (num >= 1e6) return (num / 1e6).toFixed(2) + " M";
+      if (num >= 1e3) return (num / 1e3).toFixed(1) + " K";
+      return num.toLocaleString();
+    }
+
+    function createFloatingText(x, y, text) {
+      const el = document.createElement('div');
+      el.className = 'floating-text';
+      el.innerText = text;
+      el.style.left = `${x - 20}px`;
+      el.style.top = `${y - 30}px`;
+      document.body.appendChild(el);
+
+      setTimeout(() => el.remove(), 800);
+    }
+
+    function playClickPulse() {
+      let scaleSize = 1 + Math.min(Math.log10(state.clicks + 1) * 0.12, 2.2);
+      blackhole.style.transform = `scale(${scaleSize * 0.94})`;
+      setTimeout(() => {
+        blackhole.style.transform = `scale(${scaleSize})`;
+      }, 50);
+    }
+
+    function destroyUniverse() {
+      const overlay = document.getElementById('ending-overlay');
+      overlay.classList.add('active');
+    }
+
+    function saveGame() {
+      if (!currentUser) return;
+      const saveData = {
+        state: state,
+        upgrades: upgrades.map(u => ({ count: u.count, cost: u.cost }))
+      };
+      localStorage.setItem(`blackhole_save_${currentUser}`, JSON.stringify(saveData));
+    }
+
+    function loadGame() {
+      if (!currentUser) return;
+      const saved = localStorage.getItem(`blackhole_save_${currentUser}`);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          state = parsed.state;
+          parsed.upgrades.forEach((u, i) => {
+            if (upgrades[i]) {
+              upgrades[i].count = u.count;
+              upgrades[i].cost = u.cost;
+            }
+          });
+          renderShop();
+          checkEvolutions();
+          updateUI();
+        } catch (e) {
+          console.error("Save state error:", e);
+        }
+      }
+    }
+
+    function resetGame() {
+      if (currentUser) {
+        localStorage.removeItem(`blackhole_save_${currentUser}`);
+      }
+      location.reload();
+    }
+
+    function setupCanvasBackground() {
+      const canvas = document.getElementById('space-bg');
+      const ctx = canvas.getContext('2d');
+
+      let width = canvas.width = window.innerWidth;
+      let height = canvas.height = window.innerHeight;
+
+      window.addEventListener('resize', () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      });
+
+      const stars = Array.from({ length: 150 }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        size: Math.random() * 2,
+        alpha: Math.random(),
+        speed: Math.random() * 0.02
+      }));
+
+      function draw() {
+        ctx.clearRect(0, 0, width, height);
+
+        stars.forEach(star => {
+          ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+          ctx.fill();
+
+          star.alpha += star.speed;
+          if (star.alpha > 1 || star.alpha < 0) {
+            star.speed = -star.speed;
+          }
+        });
+
+        requestAnimationFrame(draw);
+      }
+      draw();
+    }
+
+    // Run game start
+    init();
+  </script>
+</body>
+</html>
