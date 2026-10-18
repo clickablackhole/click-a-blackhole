@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Click A Blackhole - The 67 Games</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #020208;
+      color: #ffffff;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* --- TOP BAR & BRANDING --- */
+    .top-bar {
+      position: absolute;
+      top: 20px;
+      right: 25px;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(11, 12, 22, 0.85);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 10px 18px;
+      border-radius: 25px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    .brand-top {
+      position: absolute;
+      top: 25px;
+      left: 30px;
+      z-index: 50;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #38bdf8;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      background: rgba(11, 12, 22, 0.85);
+      padding: 8px 18px;
+      border-radius: 20px;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+    }
+
+    .user-info {
+      font-size: 0.9rem;
+      color: #a855f7;
+      font-weight: 600;
+    }
+
+    .profile-btn {
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      border: none;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .profile-btn:hover {
+      transform: scale(1.05);
+    }
+
+    /* --- LOGIN & CONFIRM MODALS --- */
+    #login-modal, #confirm-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(2, 2, 8, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-box {
+      background: #0b0c16;
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 30px rgba(168, 85, 247, 0.2);
+      width: 380px;
+      text-align: center;
+      position: relative;
+    }
+
+    .modal-box h2 {
+      color: #c084fc;
+      margin-bottom: 15px;
+      font-size: 1.5rem;
+    }
+
+    .modal-box p {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      background: #1e1b4b;
+      border: 1px solid #4338ca;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .modal-action-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 5px;
+      transition: transform 0.1s;
+    }
+
+    .modal-action-btn.cancel {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    .login-error {
+      color: #ef4444;
+      font-size: 0.85rem;
+      margin-top: 10px;
+      display: none;
+    }
+
+    /* --- CANVAS BACKGROUND --- */
+    #space-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* --- MAIN GAME AREA --- */
+    .game-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .stats-panel {
+      text-align: center;
+      margin-bottom: 20px;
+      z-index: 5;
+    }
+
+    .click-count {
+      font-size: 3.8rem;
+      font-weight: 800;
+      color: #c084fc;
+      text-shadow: 0 0 25px rgba(192, 132, 252, 0.7);
+      letter-spacing: 1px;
+    }
+
+    .cps-count {
+      font-size: 1.1rem;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+
+    .rebirth-badge {
+      font-size: 0.85rem;
+      color: #38bdf8;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-top: 6px;
+    }
+
+    .stage-title {
+      font-size: 0.95rem;
+      color: #e2e8f0;
+      margin-top: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 6px 18px;
+      border-radius: 20px;
+      display: inline-block;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* --- 3D BLACK HOLE WRAPPER --- */
+    .blackhole-wrapper {
+      position: relative;
+      width: 400px;
+      height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    #blackhole-canvas {
+      position: absolute;
+      z-index: 3;
+      pointer-events: none;
+      transition: transform 0.08s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .blackhole-wrapper:active #blackhole-canvas {
+      transform: scale(0.92);
+    }
+
+    /* Floating Clicks */
+    .floating-text {
+      position: absolute;
+      color: #a855f7;
+      font-weight: bold;
+      font-size: 1.4rem;
+      pointer-events: none;
+      z-index: 10;
+      animation: floatUp 0.8s ease-out forwards;
+      text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-70px) scale(1.3); }
+    }
+
+    /* --- SIDEBAR UPGRADE SHOP --- */
+    .shop-container {
+      width: 440px;
+      background: rgba(11, 12, 22, 0.85);
+      backdrop-filter: blur(12px);
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 25px;
+      display: flex;
+      flex-direction: column;
+      z-index: 5;
+      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .shop-header {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #38bdf8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 12px;
+    }
+
+    .shop-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      padding-right: 5px;
+      flex: 1;
+    }
+
+    .shop-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    .shop-list::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+
+    .upgrade-card {
+      background: rgba(30, 27, 75, 0.5);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+
+    .upgrade-card:hover:not(.disabled) {
+      background: rgba(49, 46, 129, 0.8);
+      border-color: #6366f1;
+      transform: translateY(-2px);
+    }
+
+    .upgrade-card.disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      border-color: rgba(255, 255, 255, 0.05);
+      background: rgba(15, 23, 42, 0.4);
+    }
+
+    /* Special Card Styles */
+    .upgrade-card.crazy-card {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.35), rgba(79, 70, 229, 0.5));
+      border: 1px solid #c084fc;
+    }
+
+    .upgrade-card.special-25b {
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.35), rgba(16, 185, 129, 0.5));
+      border: 1px solid #38bdf8;
+    }
+
+    .upgrade-card.post-endgame {
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.35), rgba(168, 85, 247, 0.5));
+      border: 1px solid #f472b6;
+    }
+
+    .upgrade-card.endgame-card {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.35), rgba(153, 27, 27, 0.6));
+      border: 1px solid #f87171;
+      animation: pulse-red 1.5s infinite alternate;
+    }
+
+    .upgrade-card.final-100t {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.4), rgba(239, 68, 68, 0.6));
+      border: 1px solid #fbbf24;
+      animation: pulse-gold 1.2s infinite alternate;
+    }
+
+    @keyframes pulse-red {
+      0% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.4); }
+      100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.8); }
+    }
+
+    @keyframes pulse-gold {
+      0% { box-shadow: 0 0 5px rgba(245, 158, 11, 0.4); }
+      100% { box-shadow: 0 0 25px rgba(251, 191, 36, 0.9); }
+    }
+
+    .upgrade-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .upgrade-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #f8fafc;
+    }
+
+    .upgrade-desc {
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
+
+    .upgrade-cost {
+      font-weight: 700;
+      color: #f59e0b;
+      font-size: 0.9rem;
+    }
+
+    .upgrade-count {
+      font-size: 0.8rem;
+      color: #a855f7;
+      margin-left: 5px;
+    }
+
+    .rebirth-btn {
+      margin-top: 15px;
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      border: 1px solid #38bdf8;
+      color: #ffffff;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 700;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+
+    .rebirth-btn.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      border-color: rgba(255,255,255,0.1);
+      background: rgba(15, 23, 42, 0.6);
+    }
+
+    .rebirth-btn:hover:not(.disabled) {
+      transform: scale(1.02);
+    }
+
+    .footer-credits {
+      margin-top: 12px;
+      text-align: center;
+      font-size: 0.72rem;
+      color: #64748b;
+      letter-spacing: 0.8px;
+    }
+
+    /* --- ENDING OVERLAYS --- */
+    .ending-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #ffffff;
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 2s ease;
+      text-align: center;
+      padding: 20px;
+      color: #000;
+    }
+
+    .ending-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .ending-overlay h1 {
+      font-size: 3rem;
+      color: #0f172a;
+      margin-bottom: 10px;
+    }
+
+    .ending-overlay p {
+      font-size: 1.1rem;
+      color: #334155;
+      max-width: 650px;
+      line-height: 1.5;
+    }
+
+    .credits-box {
+      margin: 25px 0 10px 0;
+    }
+
+    .credits-box h2 {
+      font-size: 1.4rem;
+      color: #7c3aed;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .credits-box h3 {
+      font-size: 1.1rem;
+      color: #0284c7;
+      margin-top: 5px;
+    }
+
+    .credits-box p {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #059669;
+      margin-top: 15px;
+    }
+
+    .update-notice {
+      background: #f1f5f9;
+      border: 2px dashed #0284c7;
+      padding: 15px 25px;
+      border-radius: 12px;
+      font-weight: 700;
+      color: #0369a1;
+      margin: 20px 0;
+      font-size: 1.05rem;
+    }
+
+    .copyright-sub {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-bottom: 25px;
+    }
+
+    .ending-overlay button {
+      background: #0f172a;
+      color: #ffffff;
+      border: none;
+      padding: 14px 35px;
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .ending-overlay button:hover {
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="brand-top">A Game by THE 67 GAMES</div>
+
+  <!-- Top Right Login Profile Bar -->
+  <div class="top-bar">
+    <span class="user-info" id="user-display">Guest Pilot</span>
+    <button class="profile-btn" onclick="openLoginModal()">Login / Save</button>
+  </div>
+
+  <!-- Login Modal Popup -->
+  <div id="login-modal">
+    <div class="modal-box">
+      <button class="close-modal" onclick="closeLoginModal()">×</button>
+      <h2>Pilot Profile</h2>
+      <input type="text" id="username-input" class="login-input" placeholder="Enter Username" autocomplete="off">
+      <input type="password" id="password-input" class="login-input" placeholder="Enter Password">
+      <button class="modal-action-btn" onclick="attemptLogin()">Save / Load Account</button>
+      <div id="login-error" class="login-error">Incorrect password for existing username!</div>
+    </div>
+  </div>
+
+  <!-- Rebirth Confirmation Modal Popup -->
+  <div id="confirm-modal">
+    <div class="modal-box">
+      <h2>Initiate Rebirth?</h2>
+      <p id="rebirth-modal-text">Rebirth requires reaching the current cost threshold. It will reset your current clicks and regular upgrades, but grant a permanent <strong>+25% multiplier boost</strong> on all future earnings!</p>
+      <button class="modal-action-btn" id="confirm-rebirth-btn" onclick="executeRebirth()">Confirm Rebirth (+25% Boost)</button>
+      <button class="modal-action-btn cancel" onclick="closeConfirmModal()">Cancel</button>
+    </div>
+  </div>
+
+  <canvas id="space-bg"></canvas>
+
+  <div class="game-container">
+    <div class="stats-panel">
+      <div class="click-count"><span id="click-display">0</span></div>
+      <div class="cps-count"><span id="cps-display">0</span> Clicks / Sec</div>
+      <div class="rebirth-badge" id="rebirth-display">Rebirth Level: 0 (+0% Boost)</div>
+      <div><span id="stage-display" class="stage-title">Stage 1: Small Singularity</span></div>
+    </div>
+
+    <div class="blackhole-wrapper" id="blackhole-click-area">
+      <canvas id="blackhole-canvas" width="380" height="380"></canvas>
+    </div>
+  </div>
+
+  <div class="shop-container">
+    <div class="shop-header">
+      <span>Upgrades</span>
+      <span style="font-size: 0.8rem; color: #64748b;" id="multiplier-display">1x Power</span>
+    </div>
+
+    <div class="shop-list" id="shop-list"></div>
+
+    <button class="rebirth-btn" id="rebirth-main-btn" onclick="openConfirmModal()">🌌 Rebirth (Req: 100M)</button>
+    <div class="footer-credits">© 2026 THE 67 GAMES. All Rights Reserved.</div>
+  </div>
+
+  <!-- 100B ENDING OVERLAY -->
+  <div id="ending-overlay" class="ending-overlay">
+    <h1>THE UNIVERSE HAS BEEN CONSUMED</h1>
+    <p>Your black hole surpassed 100 Billion clicks, crushing space-time into pure energy.</p>
+    
+    <div class="credits-box">
+      <h2>A Game by THE 67 GAMES</h2>
+      <h3>Developed by DO_YOON1110</h3>
+      <p>Thanks for playing!</p>
+    </div>
+
+    <div class="copyright-sub">© 2026 THE 67 GAMES. All Rights Reserved.</div>
+    <button onclick="continueAfterEnding()">Enter Post-Endgame Dimension (Unlock New Upgrades)</button>
+  </div>
+
+  <!-- 100T TRUE ENDING OVERLAY -->
+  <div id="true-ending-overlay" class="ending-overlay">
+    <h1>💥 OMNIPRESENT COSMIC OBLITERATION</h1>
+    <p>You achieved 100 TRILLION clicks and annihilated all dimensions across space and time!</p>
+    
+    <div class="update-notice">
+      🚨 You have reached the absolute edge of existence! <br>Please wait for the next update from <strong>THE 67 GAMES</strong> to continue!
+    </div>
+
+    <div class="credits-box">
+      <h2>A Game by THE 67 GAMES</h2>
+      <h3>Developed by DO_YOON1110</h3>
+      <p>Thank you for mastering the universe!</p>
+    </div>
+
+    <div class="copyright-sub">© 2026 THE 67 GAMES. All Rights Reserved.</div>
+    <button onclick="restartAfterTrueEnding()">Play Again (Rebirth with Mega Boost)</button>
+  </div>
+
+  <script>
+    let currentUser = null;
+    let state = {
+      clicks: 0,
+      clickPower: 1,
+      autoCps: 0,
+      stage: 0,
+      rebirths: 0,
+      rebirthMultiplier: 1.0,
+      hasCleared100B: false
+    };
+
+    // Rebirth Requirement Scale: 100M, 250M, 500M, 750M, 1B, 10B, 25B, 50B, 75B, 100B, 1T, scaling onwards
+    const rebirthRequirements = [
+      100000000,     // 100M
+      250000000,     // 250M
+      500000000,     // 500M
+      750000000,     // 750M
+      1000000000,    // 1B
+      10000000000,   // 10B
+      25000000000,   // 25B
+      50000000000,   // 50B
+      75000000000,   // 75B
+      100000000000,  // 100B
+      1000000000000  // 1T
+    ];
+
+    function getRebirthCost() {
+      if (state.rebirths < rebirthRequirements.length) {
+        return rebirthRequirements[state.rebirths];
+      }
+      return rebirthRequirements[rebirthRequirements.length - 1] * Math.pow(5, state.rebirths - rebirthRequirements.length + 1);
+    }
+
+    const baseUpgrades = [
+      { id: 'c1', name: 'Micro Grav-Lens', cost: 10, power: 1, type: 'click', count: 0, desc: '+1 click per tap' },
+      { id: 'c2', name: 'Orbital Tap', cost: 50, power: 5, type: 'click', count: 0, desc: '+5 clicks per tap' },
+      { id: 'c3', name: 'Event Horizon Pull', cost: 100, power: 10, type: 'click', count: 0, desc: '+10 clicks per tap' },
+      { id: 'c4', name: 'Subatomic Crush', cost: 500, power: 50, type: 'click', count: 0, desc: '+50 clicks per tap' },
+      { id: 'c5', name: 'Singularity Tap', cost: 5000, power: 250, type: 'click', count: 0, desc: '+250 clicks per tap' },
+      { id: 'c6', name: 'Supermassive Tap', cost: 1000000, power: 100000, type: 'click', count: 0, desc: '+100K clicks per tap' },
+
+      { id: 'a1', name: 'Space Dust Vacuum', cost: 100, cps: 1, type: 'auto', count: 0, desc: 'Sucks in +1 click/sec' },
+      { id: 'a2', name: 'Asteroid Sweeper', cost: 500, cps: 10, type: 'auto', count: 0, desc: 'Swallows +10 clicks/sec' },
+      { id: 'a3', name: 'Comet Collector', cost: 2500, cps: 50, type: 'auto', count: 0, desc: 'Consumes +50 clicks/sec' },
+      { id: 'a4', name: 'Moon Devourer', cost: 15000, cps: 300, type: 'auto', count: 0, desc: 'Devours +300 clicks/sec' },
+      { id: 'a5', name: 'Star Eater', cost: 100000, cps: 2000, type: 'auto', count: 0, desc: 'Feeds +2,000 clicks/sec' },
+      { id: 'a6', name: 'Galaxy Ingestor', cost: 2000000, cps: 50000, type: 'auto', count: 0, desc: 'Ingests +50,000 clicks/sec' },
+      { id: 'a7', name: 'Cosmic Filament Drain', cost: 50000000, cps: 1500000, type: 'auto', count: 0, desc: 'Drains +1.5M clicks/sec' },
+      { id: 'feature_100m', name: 'Dark Matter Engine', cost: 100000000, cps: 10000000, type: 'auto', count: 0, desc: '+10M clicks/sec' },
+
+      // CRAZY 1B OPTION
+      { id: 'crazy_1b', name: '🌌 Event Horizon Rift', cost: 1000000000, power: 10000000, cps: 100000000, type: 'hybrid', count: 0, desc: '+10M clicks/tap & +100M/sec [1B]' },
+
+      // 10B
+      { id: 'c7', name: 'Quantum Singularity Tap', cost: 10000000000, power: 1000000000, type: 'click', count: 0, desc: '+1 Billion clicks per tap [10B]' },
+
+      // SPECIAL 25B UPGRADE
+      { id: 'special_25b', name: '🌌 Neutron Star Collider', cost: 25000000000, power: 500000000, cps: 5000000000, type: 'hybrid', count: 0, desc: '+500M clicks/tap & +5B/sec [25B]' },
+
+      // 50B & 75B
+      { id: 'a8', name: 'Quasar Particle Converter', cost: 50000000000, cps: 1000000000, type: 'auto', count: 0, desc: '+1 Billion clicks/sec [50B]' },
+      { id: 'a9', name: 'Dimensional Vacuum Core', cost: 75000000000, cps: 20000000000, type: 'auto', count: 0, desc: '+20 Billion clicks/sec [75B]' },
+
+      // 100B FIRST END GAME OPTION
+      { id: 'end_game', name: '💥 SURPASS REALITY & END GAME', cost: 100000000000, type: 'end', count: 0, desc: 'Blow up the universe [100B]' },
+
+      // POST-ENDGAME UPGRADES (Unlocked after 100B)
+      { id: 'post_150b', name: '🌀 Hyper-Dimensional Collapse', cost: 150000000000, cps: 30000000000, type: 'post', count: 0, desc: '+30 Billion clicks/sec [150B]' },
+      { id: 'post_250b', name: '⚡ Multiverse Drain Grid', cost: 250000000000, cps: 100000000000, type: 'post', count: 0, desc: '+100 Billion clicks/sec [250B]' },
+      { id: 'post_500b', name: '🪐 Cosmic String Weaver', cost: 500000000000, cps: 250000000000, type: 'post', count: 0, desc: '+250 Billion clicks/sec [500B]' },
+      { id: 'post_750b', name: '⏳ Chronos Time Distortion', cost: 750000000000, cps: 500000000000, type: 'post', count: 0, desc: '+500 Billion clicks/sec [750B]' },
+      { id: 'post_1t', name: '🌌 Omnipresent Singularity Engine', cost: 1000000000000, power: 500000000000, cps: 5000000000000, type: 'post', count: 0, desc: '+5 Trillion clicks/sec & +500B/tap [1T]' },
+
+      // FINAL 100T END GAME OPTION
+      { id: 'final_100t', name: '💥 OMNIPRESENT COSMIC OBLITERATION', cost: 100000000000000, type: 'true_end', count: 0, desc: 'Reach absolute infinite victory [100T]' }
+    ];
+
+    let upgrades = JSON.parse(JSON.stringify(baseUpgrades));
+
+    const stages = [
+      { threshold: 0, name: "Stage 1: Small Singularity", color: "rgba(168, 85, 247, 0.8)", size: 35 },
+      { threshold: 100, name: "Stage 2: Accretion Disk Border", color: "rgba(245, 158, 11, 0.85)", size: 45 },
+      { threshold: 1000, name: "Stage 3: Photon Warp Sphere", color: "rgba(236, 72, 153, 0.85)", size: 55 },
+      { threshold: 100000, name: "Stage 4: Supermassive Black Hole", color: "rgba(239, 68, 68, 0.9)", size: 70 },
+      { threshold: 100000000, name: "Stage 5: Cosmic Anomaly", color: "rgba(56, 189, 248, 0.95)", size: 85 },
+      { threshold: 100000000000, name: "Stage 6: Multiverse Eater", color: "rgba(236, 72, 153, 0.95)", size: 100 }
+    ];
+
+    const clickDisplay = document.getElementById('click-display');
+    const cpsDisplay = document.getElementById('cps-display');
+    const stageDisplay = document.getElementById('stage-display');
+    const rebirthDisplay = document.getElementById('rebirth-display');
+    const clickArea = document.getElementById('blackhole-click-area');
+    const shopList = document.getElementById('shop-list');
+    const multDisplay = document.getElementById('multiplier-display');
+    const rebirthMainBtn = document.getElementById('rebirth-main-btn');
+
+    function init() {
+      renderShop();
+      updateUI();
+      setupSpaceAndBlackholeCanvas();
+
+      setInterval(() => {
+        if (state.autoCps > 0) {
+          addClicks((state.autoCps * state.rebirthMultiplier) / 10);
+        }
+      }, 100);
+
+      setInterval(() => {
+        if (currentUser) saveGame();
+      }, 5000);
+    }
+
+    function openLoginModal() { document.getElementById('login-modal').style.display = 'flex'; }
+    function closeLoginModal() { 
+      document.getElementById('login-modal').style.display = 'none'; 
+      document.getElementById('login-error').style.display = 'none';
+    }
+
+    function openConfirmModal() { 
+      const cost = getRebirthCost();
+      const modalText = document.getElementById('rebirth-modal-text');
+      const confirmBtn = document.getElementById('confirm-rebirth-btn');
+
+      if (state.clicks >= cost) {
+        modalText.innerHTML = `Rebirth will reset current clicks and regular upgrades, but grant a permanent <strong>+25% multiplier boost</strong>!<br><br>Cost: <strong>${formatNumber(cost)} Clicks</strong>`;
+        confirmBtn.style.display = 'block';
+      } else {
+        modalText.innerHTML = `You need at least <strong>${formatNumber(cost)} Clicks</strong> to Rebirth!<br>Current: ${formatNumber(state.clicks)}`;
+        confirmBtn.style.display = 'none';
+      }
+
+      document.getElementById('confirm-modal').style.display = 'flex'; 
+    }
+    function closeConfirmModal() { document.getElementById('confirm-modal').style.display = 'none'; }
+
+    function attemptLogin() {
+      const usernameInput = document.getElementById('username-input').value.trim();
+      const passwordInput = document.getElementById('password-input').value;
+      const errorEl = document.getElementById('login-error');
+
+      if (!usernameInput || !passwordInput) {
+        errorEl.innerText = "Please enter both username and password.";
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      let accounts = JSON.parse(localStorage.getItem('blackhole_accounts') || '{}');
+
+      if (accounts[usernameInput]) {
+        if (accounts[usernameInput].password === passwordInput) {
+          currentUser = usernameInput;
+          loadGame();
+          document.getElementById('user-display').innerText = currentUser;
+          closeLoginModal();
+        } else {
+          errorEl.innerText = "Incorrect password for this username.";
+          errorEl.style.display = 'block';
+        }
+      } else {
+        accounts[usernameInput] = { password: passwordInput };
+        localStorage.setItem('blackhole_accounts', JSON.stringify(accounts));
+        currentUser = usernameInput;
+        saveGame();
+        document.getElementById('user-display').innerText = currentUser;
+        closeLoginModal();
+      }
+    }
+
+    clickArea.addEventListener('click', (e) => {
+      const gainAmount = state.clickPower * state.rebirthMultiplier;
+      addClicks(gainAmount);
+      createFloatingText(e.clientX, e.clientY, `+${formatNumber(gainAmount)}`);
+    });
+
+    function addClicks(amount) {
+      state.clicks += amount;
+      checkEvolutions();
+      updateUI();
+    }
+
+    function executeRebirth() {
+      const cost = getRebirthCost();
+      if (state.clicks < cost) return;
+
+      state.rebirths++;
+      state.rebirthMultiplier += 0.25;
+      state.clicks = 0;
+      state.clickPower = 1;
+      state.autoCps = 0;
+      
+      // Reset upgrade costs and counts
+      upgrades = JSON.parse(JSON.stringify(baseUpgrades));
+
+      renderShop();
+      checkEvolutions();
+      updateUI();
+      closeConfirmModal();
+      if (currentUser) saveGame();
+    }
+
+    function buyUpgrade(index) {
+      const item = upgrades[index];
+      if (state.clicks >= item.cost) {
+        if (item.type === 'end') {
+          destroyUniverse();
+          return;
+        }
+        if (item.type === 'true_end') {
+          triggerTrueEnding();
+          return;
+        }
+
+        state.clicks -= item.cost;
+        item.count++;
+
+        if (item.type === 'click') {
+          state.clickPower += item.power;
+        } else if (item.type === 'auto') {
+          state.autoCps += item.cps;
+        } else if (item.type === 'hybrid' || item.type === 'post') {
+          if (item.power) state.clickPower += item.power;
+          if (item.cps) state.autoCps += item.cps;
+        }
+
+        item.cost = Math.floor(item.cost * 1.35);
+
+        renderShop();
+        updateUI();
+        if (currentUser) saveGame();
+      }
+    }
+
+    function checkEvolutions() {
+      let currentStageIndex = 0;
+      for (let i = stages.length - 1; i >= 0; i--) {
+        if (state.clicks >= stages[i].threshold) {
+          currentStageIndex = i;
+          break;
+        }
+      }
+
+      state.stage = currentStageIndex;
+      stageDisplay.innerText = stages[currentStageIndex].name;
+    }
+
+    function updateUI() {
+      clickDisplay.innerText = formatNumber(Math.floor(state.clicks));
+      cpsDisplay.innerText = formatNumber(state.autoCps * state.rebirthMultiplier);
+      multDisplay.innerText = `${formatNumber(state.clickPower * state.rebirthMultiplier)} / Click`;
+      rebirthDisplay.innerText = `Rebirth Level: ${state.rebirths} (+${Math.round((state.rebirthMultiplier - 1) * 100)}% Boost)`;
+
+      // Rebirth Button Status
+      const rebirthCost = getRebirthCost();
+      rebirthMainBtn.innerText = `🌌 Rebirth (Req: ${formatNumber(rebirthCost)})`;
+      if (state.clicks >= rebirthCost) {
+        rebirthMainBtn.classList.remove('disabled');
+      } else {
+        rebirthMainBtn.classList.add('disabled');
+      }
+
+      // Upgrade buttons status
+      upgrades.forEach((item, index) => {
+        const btn = document.getElementById(`upg-btn-${index}`);
+        if (btn) {
+          if (state.clicks >= item.cost) {
+            btn.classList.remove('disabled');
+          } else {
+            btn.classList.add('disabled');
+          }
+        }
+      });
+    }
+
+    function renderShop() {
+      shopList.innerHTML = '';
+      upgrades.forEach((item, index) => {
+        // Hide post-endgame upgrades until 100B is reached
+        if ((item.type === 'post' || item.type === 'true_end') && !state.hasCleared100B) {
+          return;
+        }
+
+        // Hide old 100B endgame button after it's been cleared
+        if (item.type === 'end' && state.hasCleared100B) {
+          return;
+        }
+
+        const card = document.createElement('div');
+        const isEndGame = item.type === 'end';
+        const isTrueEnd = item.type === 'true_end';
+        const isCrazy = item.type === 'hybrid';
+        const isSpecial25B = item.id === 'special_25b';
+        const isPost = item.type === 'post';
+        
+        let extraClass = '';
+        if (isEndGame) extraClass = 'endgame-card';
+        else if (isTrueEnd) extraClass = 'final-100t';
+        else if (isCrazy) extraClass = 'crazy-card';
+        else if (isSpecial25B) extraClass = 'special-25b';
+        else if (isPost) extraClass = 'post-endgame';
+
+        card.className = `upgrade-card ${extraClass} ${state.clicks < item.cost ? 'disabled' : ''}`;
+        card.id = `upg-btn-${index}`;
+        card.onclick = () => buyUpgrade(index);
+
+        card.innerHTML = `
+          <div class="upgrade-info">
+            <span class="upgrade-name">${item.name} ${(!isEndGame && !isTrueEnd) ? `<span class="upgrade-count">x${item.count}</span>` : ''}</span>
+            <span class="upgrade-desc">${item.desc}</span>
+          </div>
+          <div class="upgrade-cost">${formatNumber(item.cost)}</div>
+        `;
+        shopList.appendChild(card);
+      });
+    }
+
+    function formatNumber(num) {
+      if (num >= 1e14) return (num / 1e12).toFixed(1) + " T";
+      if (num >= 1e12) return (num / 1e12).toFixed(2) + " T";
+      if (num >= 1e9) return (num / 1e9).toFixed(2) + " B";
+      if (num >= 1e6) return (num / 1e6).toFixed(2) + " M";
+      if (num >= 1e3) return (num / 1e3).toFixed(1) + " K";
+      return Math.floor(num).toLocaleString();
+    }
+
+    function createFloatingText(x, y, text) {
+      const el = document.createElement('div');
+      el.className = 'floating-text';
+      el.innerText = text;
+      el.style.left = `${x - 20}px`;
+      el.style.top = `${y - 30}px`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 800);
+    }
+
+    function destroyUniverse() {
+      document.getElementById('ending-overlay').classList.add('active');
+    }
+
+    function continueAfterEnding() {
+      document.getElementById('ending-overlay').classList.remove('active');
+      state.hasCleared100B = true;
+      renderShop();
+      updateUI();
+    }
+
+    function triggerTrueEnding() {
+      document.getElementById('true-ending-overlay').classList.add('active');
+    }
+
+    function restartAfterTrueEnding() {
+      document.getElementById('true-ending-overlay').classList.remove('active');
+      state.rebirths += 5;
+      state.rebirthMultiplier += 2.0; // Huge bonus multiplier for beating 100T
+      state.clicks = 0;
+      state.clickPower = 1;
+      state.autoCps = 0;
+      state.hasCleared100B = false;
+
+      upgrades = JSON.parse(JSON.stringify(baseUpgrades));
+      renderShop();
+      checkEvolutions();
+      updateUI();
+      if (currentUser) saveGame();
+    }
+
+    function saveGame() {
+      if (!currentUser) return;
+      const saveData = {
+        state: state,
+        upgrades: upgrades.map(u => ({ count: u.count, cost: u.cost }))
+      };
+      localStorage.setItem(`blackhole_save_${currentUser}`, JSON.stringify(saveData));
+    }
+
+    function loadGame() {
+      if (!currentUser) return;
+      const saved = localStorage.getItem(`blackhole_save_${currentUser}`);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          state = parsed.state;
+          parsed.upgrades.forEach((u, i) => {
+            if (upgrades[i]) {
+              upgrades[i].count = u.count;
+              upgrades[i].cost = u.cost;
+            }
+          });
+          renderShop();
+          checkEvolutions();
+          updateUI();
+        } catch (e) {
+          console.error("Save state error:", e);
+        }
+      }
+    }
+
+    // --- 3D DYNAMIC ROTATING BLACK HOLE ENGINE ---
+    function setupSpaceAndBlackholeCanvas() {
+      const bgCanvas = document.getElementById('space-bg');
+      const bgCtx = bgCanvas.getContext('2d');
+      const bhCanvas = document.getElementById('blackhole-canvas');
+      const bhCtx = bhCanvas.getContext('2d');
+
+      let width = bgCanvas.width = window.innerWidth;
+      let height = bgCanvas.height = window.innerHeight;
+
+      window.addEventListener('resize', () => {
+        width = bgCanvas.width = window.innerWidth;
+        height = bgCanvas.height = window.innerHeight;
+      });
+
+      const stars = Array.from({ length: 150 }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        size: Math.random() * 2,
+        alpha: Math.random(),
+        speed: Math.random() * 0.02
+      }));
+
+      const spaceDebris = Array.from({ length: 10 }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        radius: Math.random() * 5 + 3,
+        color: ['#38bdf8', '#f59e0b', '#ec4899', '#60a5fa'][Math.floor(Math.random() * 4)],
+        speed: Math.random() * 1.5 + 0.5
+      }));
+
+      let rotationAngle = 0;
+
+      function animate() {
+        bgCtx.clearRect(0, 0, width, height);
+
+        stars.forEach(star => {
+          bgCtx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
+          bgCtx.beginPath();
+          bgCtx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+          bgCtx.fill();
+
+          star.alpha += star.speed;
+          if (star.alpha > 1 || star.alpha < 0) star.speed = -star.speed;
+        });
+
+        const centerX = width / 2;
+        const centerY = height / 2;
+
+        spaceDebris.forEach(debris => {
+          const dx = centerX - debris.x;
+          const dy = centerY - debris.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < 30) {
+            debris.x = Math.random() < 0.5 ? -50 : width + 50;
+            debris.y = Math.random() * height;
+          } else {
+            debris.x += (dx / dist) * debris.speed;
+            debris.y += (dy / dist) * debris.speed;
+          }
+
+          bgCtx.fillStyle = debris.color;
+          bgCtx.beginPath();
+          bgCtx.arc(debris.x, debris.y, debris.radius, 0, Math.PI * 2);
+          bgCtx.fill();
+        });
+
+        bhCtx.clearRect(0, 0, 380, 380);
+        
+        const bhCenterX = 190;
+        const bhCenterY = 190;
+        rotationAngle += 0.03;
+
+        const currentStageData = stages[state.stage] || stages[0];
+        const coreRadius = currentStageData.size;
+
+        bhCtx.save();
+        bhCtx.translate(bhCenterX, bhCenterY);
+        bhCtx.rotate(rotationAngle);
+        bhCtx.scale(1, 0.45);
+
+        const gradient = bhCtx.createRadialGradient(0, 0, coreRadius, 0, 0, coreRadius + 75);
+        gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+        gradient.addColorStop(0.5, currentStageData.color);
+        gradient.addColorStop(1, 'transparent');
+
+        bhCtx.fillStyle = gradient;
+        bhCtx.beginPath();
+        bhCtx.arc(0, 0, coreRadius + 75, 0, Math.PI * 2);
+        bhCtx.fill();
+        bhCtx.restore();
+
+        const ringGlow = bhCtx.createRadialGradient(bhCenterX, bhCenterY, coreRadius - 5, bhCenterX, bhCenterY, coreRadius + 25);
+        ringGlow.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+        ringGlow.addColorStop(0.5, currentStageData.color);
+        ringGlow.addColorStop(1, 'transparent');
+        bhCtx.fillStyle = ringGlow;
+        bhCtx.beginPath();
+        bhCtx.arc(bhCenterX, bhCenterY, coreRadius + 25, 0, Math.PI * 2);
+        bhCtx.fill();
+
+        bhCtx.fillStyle = '#000000';
+        bhCtx.beginPath();
+        bhCtx.arc(bhCenterX, bhCenterY, coreRadius, 0, Math.PI * 2);
+        bhCtx.fill();
+
+        bhCtx.strokeStyle = '#ffffff';
+        bhCtx.lineWidth = 2;
+        bhCtx.stroke();
+
+        requestAnimationFrame(animate);
+      }
+      animate();
+    }
+
+    init();
+  </script>
+</body>
+</html>
